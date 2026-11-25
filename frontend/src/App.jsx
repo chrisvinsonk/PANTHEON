@@ -63,7 +63,15 @@ export default function App() {
     );
   }
 
-  if (isLoaded && isSignedIn) return <Dashboard />;
+  if (!isLoaded) {
+    return (
+      <div className="app-shell flex min-h-svh items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+      </div>
+    );
+  }
+
+  if (isSignedIn) return <Dashboard />;
 
   return (
     <div className="app-shell">
