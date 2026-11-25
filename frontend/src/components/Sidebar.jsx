@@ -1,5 +1,6 @@
 import { UserButton } from "@clerk/react";
 import {
+  Cpu,
   Gavel,
   Landmark,
   LayoutDashboard,
@@ -36,6 +37,7 @@ const workspaceLinks = [
 ];
 
 const systemLinks = [
+  { key: "models", label: "Model Sources", icon: Cpu },
   { key: "configuration", label: "Configuration", icon: Settings2 },
 ];
 
