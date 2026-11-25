@@ -66,20 +66,12 @@ export default function Landing() {
             the final decree.
           </p>
           <div className="flex flex-wrap gap-3">
-            <SignInButton
-              mode="modal"
-              fallbackRedirectUrl={homeUrl}
-              signUpFallbackRedirectUrl={homeUrl}
-            >
+            <SignInButton mode="redirect" forceRedirectUrl={homeUrl}>
               <Button size="lg" className="h-12 gap-3 px-6 font-semibold">
                 Sign in to enter <ArrowRight className="size-4" />
               </Button>
             </SignInButton>
-            <SignUpButton
-              mode="modal"
-              fallbackRedirectUrl={homeUrl}
-              signInFallbackRedirectUrl={homeUrl}
-            >
+            <SignUpButton mode="redirect" forceRedirectUrl={homeUrl}>
               <Button size="lg" variant="outline" className="h-12 border-border/80 px-6">
                 Create an account
               </Button>
