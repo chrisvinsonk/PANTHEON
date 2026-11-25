@@ -1,0 +1,73 @@
+import {
+  AuthenticateWithRedirectCallback,
+  SignIn,
+  SignUp,
+  useAuth,
+} from "@clerk/react";
+import Landing from "./components/Landing";
+import Dashboard from "./components/Dashboard";
+import { homeUrl, signInUrl, signUpUrl } from "./auth";
+import "./styles.css";
+
+// The app has no router: Clerk's own routes are matched on the URL so the OAuth
+// callback can be completed here, on the origin that served the page. Before
+// this existed, Clerk finished the OAuth round trip on its hosted Account
+// Portal, which then redirected to the instance home URL (localhost:5174).
+
+/** Centers a Clerk component in the same shell the landing page uses. */
+function AuthShell({ children }) {
+  return (
+    <div className="app-shell flex min-h-svh items-center justify-center px-6 py-16">
+      {children}
+    </div>
+  );
+}
+
+function SSOCallbackRoute() {
+  return (
+    <AuthShell>
+      <AuthenticateWithRedirectCallback
+        signInUrl={signInUrl}
+        signUpUrl={signUpUrl}
+        signInFallbackRedirectUrl={homeUrl}
+        signUpFallbackRedirectUrl={homeUrl}
+      />
+    </AuthShell>
+  );
+}
+
+export default function App() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const pathname = window.location.pathname;
+  // Clerk appends its routes as a hash when it builds the sign-in URL, so the
+  // callback can arrive as /sign-in#/sso-callback as well as /sso-callback.
+  const isSSOCallback =
+    pathname.startsWith("/sso-callback") ||
+    window.location.hash.includes("sso-callback");
+
+  if (isSSOCallback) return <SSOCallbackRoute />;
+
+  if (pathname.startsWith("/sign-in")) {
+    return (
+      <AuthShell>
+        <SignIn routing="path" path="/sign-in" fallbackRedirectUrl={homeUrl} />
+      </AuthShell>
+    );
+  }
+
+  if (pathname.startsWith("/sign-up")) {
+    return (
+      <AuthShell>
+        <SignUp routing="path" path="/sign-up" fallbackRedirectUrl={homeUrl} />
+      </AuthShell>
+    );
+  }
+
+  if (isLoaded && isSignedIn) return <Dashboard />;
+
+  return (
+    <div className="app-shell">
+      <Landing />
+    </div>
+  );
+}
