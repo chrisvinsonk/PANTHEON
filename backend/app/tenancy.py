@@ -36,9 +36,9 @@ def get_active_company(
     user_id = user.get("sub")
     if x_company_id is not None:
         company = db.get(Company, x_company_id)
-        if company is None or company.owner_user_id != user_id:
-            raise HTTPException(404, "Company not found")
-        return company
+        if company is not None and company.owner_user_id == user_id:
+            return company
+        # Stale or foreign company id: fall back to the user's own company.
     return ensure_company(db, owner_user_id=user_id)
 
 
