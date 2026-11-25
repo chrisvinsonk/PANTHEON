@@ -1,5 +1,5 @@
 import { ArrowRight, Crown, ScrollText, Swords, Target } from "lucide-react";
-import { SignInButton, SignUpButton } from "@clerk/react";
+// Auth handled via full-page routes (/sign-in, /sign-up) for reliable redirects.
 import Aurora from "./Aurora";
 import BlurText from "./BlurText";
 import SpotlightCard from "./SpotlightCard";
@@ -66,16 +66,16 @@ export default function Landing() {
             the final decree.
           </p>
           <div className="flex flex-wrap gap-3">
-            <SignInButton mode="redirect" forceRedirectUrl={homeUrl}>
+            <a href="/sign-in">
               <Button size="lg" className="h-12 gap-3 px-6 font-semibold">
                 Sign in to enter <ArrowRight className="size-4" />
               </Button>
-            </SignInButton>
-            <SignUpButton mode="redirect" forceRedirectUrl={homeUrl}>
+            </a>
+            <a href="/sign-up">
               <Button size="lg" variant="outline" className="h-12 border-border/80 px-6">
                 Create an account
               </Button>
-            </SignUpButton>
+            </a>
           </div>
         </section>
 
