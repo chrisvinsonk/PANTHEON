@@ -53,7 +53,8 @@ export default function App() {
       try {
         const token = await getToken();
         const company = await getCompany(token);
-        if (!cancelled && company && !company.onboarded && !(company.name && company.name.trim())) {
+        const alreadyOnboarded = window.localStorage.getItem("pantheon.onboarded") === "true";
+        if (!cancelled && !alreadyOnboarded && company && !company.onboarded && !(company.name && company.name.trim())) {
           setNeedsOnboarding(true);
         }
       } catch (e) {
@@ -96,7 +97,7 @@ export default function App() {
   }
 
   if (isSignedIn && needsOnboarding) {
-    return <Onboarding getToken={getToken} onComplete={() => { setNeedsOnboarding(false); window.location.reload(); }} />;
+    return <Onboarding getToken={getToken} onComplete={() => { window.localStorage.setItem("pantheon.onboarded", "true"); setNeedsOnboarding(false); window.location.reload(); }} />;
   }
 
   if (isSignedIn) return <Dashboard />;
