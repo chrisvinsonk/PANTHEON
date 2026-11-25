@@ -94,8 +94,6 @@ def startup():
     db = SessionLocal()
     try:
         recover_interrupted_runs(db)
-        seed_defaults(db)
-        seed_environment_llm_sources(db)
         from .company import ensure_company
 
         company = ensure_company(db)

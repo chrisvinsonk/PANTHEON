@@ -135,14 +135,14 @@ def ensure_company(db: Session, owner_user_id: str | None = None) -> Company:
     if company is None:
         company = seed_company_profile(
             db,
-            name=DEFAULT_COMPANY["name"],
-            mission=DEFAULT_COMPANY["mission"],
-            strategic_context=DEFAULT_COMPANY["strategic_context"],
-            owner=DEFAULT_COMPANY["owner"],
-            stage=DEFAULT_COMPANY["stage"],
-            include_starters=True,
+            name="",
+            mission="",
+            strategic_context="",
+            owner="Founder",
+            owner_user_id=owner_user_id,
+            stage="",
+            include_starters=False,
         )
-        company.owner_user_id = owner_user_id
         db.add(company)
         db.commit()
         db.refresh(company)
