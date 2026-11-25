@@ -3,6 +3,7 @@ import { useAuth } from "@clerk/react";
 import { Building2, Plus, Trash2 } from "lucide-react";
 import { getCompanies, createCompanyProfile, deleteCompanyProfile, updateCompanyProfile } from "../api";
 import { Button } from "@/components/ui/button";
+import { clearActiveCompanyId } from "../company";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +51,8 @@ export default function Companies() {
     if (!window.confirm("Delete this company?")) return;
     try {
       const token = await getToken();
-      await deleteCompanyProfile(id, false, token);
+      await deleteCompanyProfile(id, true, token);
+      clearActiveCompanyId();
       await load();
     } catch (e) {
       setError(e.message);
