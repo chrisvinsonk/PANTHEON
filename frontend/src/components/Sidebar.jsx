@@ -86,12 +86,6 @@ export default function Sidebar({ activeView, onNavigate }) {
         <NavGroup label="SYSTEM" links={systemLinks} activeView={activeView} onNavigate={onNavigate} />
       </SidebarContent>
       <SidebarFooter className="gap-3 p-3">
-        <Badge
-          variant="outline"
-          className="w-fit border-primary/25 font-mono text-[9px] tracking-[0.12em] text-primary group-data-[collapsible=icon]:hidden"
-        >
-          LOCAL INSTANCE
-        </Badge>
         <Separator />
         <div className="flex min-w-0 items-center gap-3 px-1">
           <UserButton afterSignOutUrl="/" />
