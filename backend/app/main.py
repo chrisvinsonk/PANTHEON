@@ -40,9 +40,9 @@ app = FastAPI(
     license_info={
         "name": "Prototype — internal use only",
     },
-    docs_url="/docs" if settings.app_env != "production" else None,
-    redoc_url="/redoc" if settings.app_env != "production" else None,
-    openapi_url="/api/openapi.json" if settings.app_env != "production" else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/api/openapi.json",
     openapi_tags=[
         {"name": "health", "description": "Service health checks."},
         {"name": "executives", "description": "Executive roster (CEO, CFO, CTO, CSO)."},
