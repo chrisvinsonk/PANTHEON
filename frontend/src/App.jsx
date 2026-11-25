@@ -53,7 +53,7 @@ export default function App() {
       try {
         const token = await getToken();
         const company = await getCompany(token);
-        if (!cancelled && company && company.onboarded === false) {
+        if (!cancelled && company && !company.onboarded) {
           setNeedsOnboarding(true);
         }
       } catch (e) {
