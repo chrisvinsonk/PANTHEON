@@ -8,6 +8,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./styles.css";
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
+if (!publishableKey) {
+  document.getElementById("root").innerHTML =
+    '<div style="padding:2rem;font-family:sans-serif;color:#f5f2e9;background:#0a0a09;min-height:100vh">Missing VITE_CLERK_PUBLISHABLE_KEY. Set it in Vercel and redeploy.</div>';
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+}
+
 // Auth must always return to the origin the app is actually served from. Clerk
 // falls back to the instance's configured home URL when no explicit redirect is
 // given, which is how a production build ended up redirecting to localhost:5174.
