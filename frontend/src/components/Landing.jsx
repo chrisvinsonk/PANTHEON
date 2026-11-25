@@ -1,4 +1,4 @@
-import { ArrowRight, Crown, Github, Landmark, ScrollText, Shield, Sparkles, Target } from "lucide-react";
+import { ArrowRight, Crown, GitBranch, Landmark, ScrollText, Shield, Sparkles, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,7 +42,7 @@ export default function Landing() {
         </div>
         <div className="flex items-center gap-3">
           <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hidden items-center gap-2 text-sm text-muted-foreground hover:text-foreground sm:flex">
-            <Github className="size-4" /> GitHub
+            <GitBranch className="size-4" /> GitHub
           </a>
           <a href="/sign-in">
             <Button size="sm" variant="outline" className="border-border/80">Sign in</Button>
@@ -75,7 +75,7 @@ export default function Landing() {
           </a>
           <a href={GITHUB_URL} target="_blank" rel="noreferrer">
             <Button size="lg" variant="outline" className="h-12 gap-3 border-border/80 px-6">
-              <Github className="size-4" /> View on GitHub
+              <GitBranch className="size-4" /> View on GitHub
             </Button>
           </a>
         </div>
@@ -136,7 +136,7 @@ export default function Landing() {
             </div>
             <a href={GITHUB_URL} target="_blank" rel="noreferrer">
               <Button size="lg" className="h-12 gap-3 px-6 font-semibold">
-                <Github className="size-4" /> Star on GitHub
+                <GitBranch className="size-4" /> Star on GitHub
               </Button>
             </a>
           </CardContent>
