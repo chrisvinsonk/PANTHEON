@@ -11,6 +11,24 @@ Founder-controlled decree recording.
 
 Live demo: <https://pantheon.kunnankada.in>
 
+## What Pantheon does
+
+Pantheon turns a Founder's strategic question into a deliberated board
+recommendation:
+
+```mermaid
+flowchart LR
+    Q["Founder question"] --> C["Council convenes"]
+    C --> A["4 executives assess<br/>(CEO · CFO · CTO · CSO)"]
+    A --> X["Cross-examine claims"]
+    X --> R["Revise positions"]
+    R --> S["Board-chair synthesis"]
+    S --> D["Founder records decree"]
+```
+
+Each executive brings a distinct lens; positions are extracted, challenged,
+and revised before a single consolidated recommendation is produced.
+
 ## Architecture
 
 ```mermaid
