@@ -1,5 +1,6 @@
 import { UserButton } from "@clerk/react";
 import {
+  BookOpen,
   Cpu,
   Gavel,
   Landmark,
@@ -39,6 +40,7 @@ const workspaceLinks = [
 const systemLinks = [
   { key: "models", label: "Model Sources", icon: Cpu },
   { key: "configuration", label: "Configuration", icon: Settings2 },
+  { key: "how_to_use", label: "How to Use", icon: BookOpen },
 ];
 
 function NavGroup({ label, links, activeView, onNavigate }) {

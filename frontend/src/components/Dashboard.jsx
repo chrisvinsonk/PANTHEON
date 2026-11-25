@@ -72,6 +72,7 @@ const KnowledgeVault = lazy(() => import("./KnowledgeVault"));
 const Performance = lazy(() => import("./Performance"));
 const Configuration = lazy(() => import("./Configuration"));
 const Operations = lazy(() => import("./Operations"));
+const HowToUse = lazy(() => import("./HowToUse"));
 
 function MarkdownResponse({ children, className = "" }) {
   return (
@@ -1570,6 +1571,11 @@ export default function Dashboard() {
           {dashboardView === "models" && (
             <Suspense fallback={<div className="text-sm text-muted-foreground">Loading model sources…</div>}>
               <ModelSources />
+            </Suspense>
+          )}
+          {dashboardView === "how_to_use" && (
+            <Suspense fallback={<div className="text-sm text-muted-foreground">Loading guide…</div>}>
+              <HowToUse />
             </Suspense>
           )}
           {dashboardView === "command_centre" && (
