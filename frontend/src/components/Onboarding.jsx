@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateCompany } from "../api";
+import { setActiveCompanyId } from "../company";
 
 const STEPS = ["Company", "Strategy", "Review"];
 
@@ -26,7 +27,8 @@ export default function Onboarding({ getToken, onComplete }) {
     setError("");
     try {
       const token = await getToken();
-      await updateCompany({ ...form, onboarded: true }, token);
+      const company = await updateCompany({ ...form, onboarded: true }, token);
+      if (company?.id) setActiveCompanyId(company.id);
       onComplete?.();
     } catch (e) {
       setError(e.message || "Failed to save");
