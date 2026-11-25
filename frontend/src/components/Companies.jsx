@@ -48,6 +48,10 @@ export default function Companies() {
   };
 
   const remove = async (id) => {
+    if (companies.length <= 1) {
+      window.alert("Keep at least one company. Create another before deleting this one.");
+      return;
+    }
     if (!window.confirm("Delete this company?")) return;
     try {
       const token = await getToken();
