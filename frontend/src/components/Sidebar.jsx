@@ -1,6 +1,7 @@
 import { UserButton } from "@clerk/react";
 import {
   BookOpen,
+  Building2,
   Cpu,
   Gavel,
   Landmark,
@@ -38,6 +39,7 @@ const workspaceLinks = [
 ];
 
 const systemLinks = [
+  { key: "companies", label: "Companies", icon: Building2 },
   { key: "models", label: "Model Sources", icon: Cpu },
   { key: "configuration", label: "Configuration", icon: Settings2 },
   { key: "how_to_use", label: "How to Use", icon: BookOpen },

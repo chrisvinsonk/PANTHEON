@@ -73,6 +73,7 @@ const Performance = lazy(() => import("./Performance"));
 const Configuration = lazy(() => import("./Configuration"));
 const Operations = lazy(() => import("./Operations"));
 const HowToUse = lazy(() => import("./HowToUse"));
+const Companies = lazy(() => import("./Companies"));
 
 function MarkdownResponse({ children, className = "" }) {
   return (
@@ -1576,6 +1577,11 @@ export default function Dashboard() {
           {dashboardView === "how_to_use" && (
             <Suspense fallback={<div className="text-sm text-muted-foreground">Loading guide…</div>}>
               <HowToUse />
+            </Suspense>
+          )}
+          {dashboardView === "companies" && (
+            <Suspense fallback={<div className="text-sm text-muted-foreground">Loading companies…</div>}>
+              <Companies />
             </Suspense>
           )}
           {dashboardView === "command_centre" && (
