@@ -101,7 +101,7 @@ export default function Companies() {
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => rename(c)}>Rename</Button>
-                <Button size="sm" variant="destructive" onClick={() => remove(c.id)}><Trash2 className="size-3.5" /></Button>
+                <Button size="sm" variant="destructive" disabled={companies.length <= 1} title={companies.length <= 1 ? "Keep at least one company" : "Delete company"} onClick={() => remove(c.id)}><Trash2 className="size-3.5" /></Button>
               </div>
             </CardContent>
           </Card>
