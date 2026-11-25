@@ -11,6 +11,45 @@ Founder-controlled decree recording.
 
 Live demo: <https://pantheon.kunnankada.in>
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph FE["Frontend (React / Vite)"]
+        UI["Web UI<br/>protected routes"]
+    end
+
+    subgraph BE["Backend (FastAPI)"]
+        API["REST API /api"]
+        AUTH["Clerk JWT auth"]
+        TEN["Multi-tenant layer<br/>companies · decisions · evidence"]
+        LG["LangGraph deliberation graph"]
+        AG["Agents: CEO · CFO · CTO · CSO"]
+        EX["Position extraction"]
+        CE["Cross-examination"]
+        RV["Position revision"]
+        SYN["Board-chair synthesis"]
+        DEC["Decree recording"]
+        LLM["LLM router (BYOK)<br/>local / cloud / hosted providers"]
+        DB[("SQLite / PostgreSQL")]
+        ENC["Encrypted API keys<br/>(Fernet)"]
+
+        API --> AUTH --> TEN
+        TEN --> LG
+        LG --> AG --> EX --> CE --> RV --> SYN --> DEC
+        AG -.-> LLM
+        SYN -.-> LLM
+        LLM --> ENC
+        TEN --> DB
+    end
+
+    UI --> API
+```
+
+The agentic AI backend is the core of Pantheon: a deterministic LangGraph
+workflow orchestrates four executive agents, cross-examination, revisions, and a
+final board-chair synthesis, with a BYOK LLM router that never bakes in keys.
+
 ## Features
 
 - FastAPI backend with SQLAlchemy models and startup seeding (SQLite default, PostgreSQL optional)
