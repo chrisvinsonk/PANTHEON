@@ -504,6 +504,7 @@ class CompanyUpdate(BaseModel):
     strategic_context: str | None = Field(default=None, max_length=8000)
     owner: str | None = Field(default=None, max_length=160)
     stage: str | None = Field(default=None, max_length=40)
+    onboarded: bool | None = None
 
 
 class CompanyCreate(BaseModel):
@@ -522,6 +523,7 @@ class CompanyOut(BaseModel):
     strategic_context: str
     owner: str
     stage: str
+    onboarded: bool = False
     strategic_priorities: list[CompanyPriorityOut]
     constraints: list[CompanyConstraintOut]
     financial_assumptions: list[CompanyFinancialAssumptionOut]
