@@ -4,6 +4,7 @@ import {
   SignIn,
   SignUp,
   useAuth,
+  useUser,
 } from "@clerk/react";
 import Landing from "./components/Landing";
 import Dashboard from "./components/Dashboard";
@@ -41,6 +42,8 @@ function SSOCallbackRoute() {
 
 export default function App() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { user } = useUser();
+  const userId = user?.id;
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [checked, setChecked] = useState(false);
   const pathname = window.location.pathname;
@@ -53,7 +56,7 @@ export default function App() {
       try {
         const token = await getToken();
         const company = await getCompany(token);
-        const alreadyOnboarded = window.localStorage.getItem("pantheon.onboarded") === "true";
+        const alreadyOnboarded = userId ? window.localStorage.getItem(`pantheon.onboarded.${userId}`) === "true" : false;
         if (!cancelled && !alreadyOnboarded && company && !company.onboarded && !(company.name && company.name.trim())) {
           setNeedsOnboarding(true);
         }
@@ -97,7 +100,7 @@ export default function App() {
   }
 
   if (isSignedIn && needsOnboarding) {
-    return <Onboarding getToken={getToken} onComplete={() => { window.localStorage.setItem("pantheon.onboarded", "true"); setNeedsOnboarding(false); window.location.reload(); }} />;
+    return <Onboarding getToken={getToken} onComplete={() => { if (userId) window.localStorage.setItem(`pantheon.onboarded.${userId}`, "true"); setNeedsOnboarding(false); window.location.reload(); }} />;
   }
 
   if (isSignedIn) return <Dashboard />;
