@@ -40,9 +40,9 @@ app = FastAPI(
     license_info={
         "name": "Prototype — internal use only",
     },
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/api/openapi.json",
+    docs_url="/docs" if settings.app_env != "production" else None,
+    redoc_url="/redoc" if settings.app_env != "production" else None,
+    openapi_url="/api/openapi.json" if settings.app_env != "production" else None,
     openapi_tags=[
         {"name": "health", "description": "Service health checks."},
         {"name": "executives", "description": "Executive roster (CEO, CFO, CTO, CSO)."},
@@ -59,6 +59,16 @@ app.add_middleware(
     CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False,
     allow_methods=["*"], allow_headers=["*"]
 )
+
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
+    return response
 
 
 def custom_openapi():
