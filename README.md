@@ -17,7 +17,7 @@ Pantheon turns a Founder's strategic question into a deliberated board
 recommendation:
 
 ```mermaid
-flowchart LR
+flowchart TB
     Q["Founder question"] --> C["Council convenes"]
     C --> A["4 executives assess<br/>(CEO · CFO · CTO · CSO)"]
     A --> X["Cross-examine claims"]

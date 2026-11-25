@@ -237,6 +237,7 @@ def serialize_company(company: Company) -> dict:
     return {
         "id": company.id,
         "name": company.name or "",
+        "onboarded": bool(getattr(company, "onboarded", False)),
         "mission": company.mission or "",
         "strategic_context": company.strategic_context or "",
         "owner": company.owner or "",
