@@ -96,7 +96,7 @@ export default function App() {
   }
 
   if (isSignedIn && needsOnboarding) {
-    return <Onboarding getToken={getToken} onComplete={() => setNeedsOnboarding(false)} />;
+    return <Onboarding getToken={getToken} onComplete={() => { setNeedsOnboarding(false); window.location.reload(); }} />;
   }
 
   if (isSignedIn) return <Dashboard />;
