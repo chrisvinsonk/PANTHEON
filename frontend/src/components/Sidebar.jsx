@@ -4,6 +4,7 @@ import {
   Landmark,
   LayoutDashboard,
   LineChart,
+  ScrollText,
   Settings2,
   ShieldCheck,
   Vault,
@@ -27,6 +28,7 @@ import {
 const workspaceLinks = [
   { key: "command_centre", label: "Command Centre", icon: LayoutDashboard },
   { key: "chamber", label: "Council Chamber", icon: Landmark },
+  { key: "conclaves", label: "Conclaves", icon: ScrollText },
   { key: "vault", label: "Knowledge Vault", icon: Vault },
   { key: "decisions", label: "Decision Register", icon: Gavel },
   { key: "performance", label: "Performance", icon: LineChart },
