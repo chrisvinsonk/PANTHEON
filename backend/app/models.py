@@ -44,6 +44,7 @@ class Company(Base):
     mission: Mapped[str] = mapped_column(Text, default="")
     strategic_context: Mapped[str] = mapped_column(Text, default="")
     owner: Mapped[str] = mapped_column(String(160), default="")
+    owner_user_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     stage: Mapped[str] = mapped_column(String(40), default="")
     strategic_priorities: Mapped[list[dict]] = mapped_column(JSON, default=list)
     constraints: Mapped[list[dict]] = mapped_column(JSON, default=list)

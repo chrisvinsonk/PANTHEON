@@ -36,6 +36,7 @@ def ensure_database_compatibility(bind: Engine = engine) -> None:
             columns = {column["name"] for column in inspector.get_columns("companies")}
             compatibility_columns = {
                 "owner": "VARCHAR(160) NOT NULL DEFAULT ''",
+                "owner_user_id": "VARCHAR(128)",
                 "stage": "VARCHAR(40) NOT NULL DEFAULT ''",
                 "strategic_priorities": "JSON NOT NULL DEFAULT '[]'",
                 "constraints": "JSON NOT NULL DEFAULT '[]'",

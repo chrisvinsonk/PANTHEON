@@ -112,21 +112,35 @@ def _delete_company_data(db: Session, company_id: int) -> None:
 
 
 @router.get("", response_model=list[CompanyProfileOut])
-def list_companies(db: Session = Depends(get_db)):
-    companies = db.query(Company).order_by(Company.id.asc()).all()
+def list_companies(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    user_id = user.get("sub")
+    companies = (
+        db.query(Company)
+        .filter(Company.owner_user_id == user_id)
+        .order_by(Company.id.asc())
+        .all()
+    )
     if not companies:
-        companies = [ensure_default_company(db)]
+        companies = [ensure_company_for_user(db, user_id)]
     return [_profile(db, company) for company in companies]
 
 
 @router.post("", response_model=CompanyProfileOut, status_code=201)
-def create_company(payload: CompanyCreate, db: Session = Depends(get_db)):
+def create_company(
+    payload: CompanyCreate,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
     company = seed_company_profile(
         db,
         name=payload.name.strip(),
         mission=payload.mission.strip(),
         strategic_context=payload.strategic_context.strip(),
         owner=payload.owner.strip() or "Founder",
+        owner_user_id=user.get("sub"),
         stage=payload.stage.strip(),
         include_starters=payload.seed_starters,
     )
@@ -134,9 +148,13 @@ def create_company(payload: CompanyCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{company_id}", response_model=CompanyProfileOut)
-def get_company(company_id: int, db: Session = Depends(get_db)):
+def get_company(
+    company_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
     company = db.get(Company, company_id)
-    if company is None:
+    if company is None or company.owner_user_id != user.get("sub"):
         raise HTTPException(404, "Company not found")
     return _profile(db, company)
 
@@ -192,7 +210,7 @@ def delete_company(
     return Response(status_code=204)
 
 
-def ensure_default_company(db: Session) -> Company:
+def ensure_company_for_user(db: Session, user_id: str | None) -> Company:
     from ..company import ensure_company
 
-    return ensure_company(db)
+    return ensure_company(db, owner_user_id=user_id)

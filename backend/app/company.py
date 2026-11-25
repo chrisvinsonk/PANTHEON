@@ -126,9 +126,12 @@ def touch(company: Company) -> None:
     company.updated_at = _now()
 
 
-def ensure_company(db: Session) -> Company:
-    """Return the workspace's first company, creating the seeded default when absent."""
-    company = db.query(Company).order_by(Company.id.asc()).first()
+def ensure_company(db: Session, owner_user_id: str | None = None) -> Company:
+    """Return the user's company, creating the seeded default when absent."""
+    query = db.query(Company)
+    if owner_user_id is not None:
+        query = query.filter(Company.owner_user_id == owner_user_id)
+    company = query.order_by(Company.id.asc()).first()
     if company is None:
         company = seed_company_profile(
             db,
@@ -139,6 +142,10 @@ def ensure_company(db: Session) -> Company:
             stage=DEFAULT_COMPANY["stage"],
             include_starters=True,
         )
+        company.owner_user_id = owner_user_id
+        db.add(company)
+        db.commit()
+        db.refresh(company)
     return company
 
 
@@ -149,6 +156,7 @@ def seed_company_profile(
     mission: str = "",
     strategic_context: str = "",
     owner: str = "Founder",
+    owner_user_id: str | None = None,
     stage: str = "",
     include_starters: bool = False,
 ) -> Company:
@@ -163,6 +171,7 @@ def seed_company_profile(
         mission=mission,
         strategic_context=strategic_context,
         owner=owner,
+        owner_user_id=owner_user_id,
         stage=stage,
         strategic_priorities=[
             {"id": _new_id(), **item} for item in (STARTER_PRIORITIES if include_starters else [])
