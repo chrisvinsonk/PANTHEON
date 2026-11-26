@@ -564,7 +564,15 @@ function RunProgress({ events, checkpoints, status, error, progress }) {
 
 export default function Dashboard() {
   const { getToken } = useAuth();
-  const [dashboardView, setDashboardView] = useState("chamber");
+  const [dashboardView, setDashboardView] = useState(() => {
+    if (typeof window === "undefined") return "chamber";
+    return window.localStorage.getItem("pantheon.dashboardView") || "chamber";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("pantheon.dashboardView", dashboardView);
+    }
+  }, [dashboardView]);
   const [meetings, setMeetings] = useState([]);
   const [evidenceRecords, setEvidenceRecords] = useState([]);
   const [selectedEvidenceIds, setSelectedEvidenceIds] = useState([]);
