@@ -78,6 +78,7 @@ export default function Companies() {
   return (
     <section className="space-y-6">
       <h2 className="font-heading text-2xl tracking-wide text-primary sm:text-3xl">Manage Companies</h2>
+      <p className="text-xs text-muted-foreground">At least one company must remain. Create another before deleting the current one.</p>
       {error && <p className="text-sm text-red-400">{error}</p>}
       <Card className="border-border/60 bg-card/60">
         <CardHeader><CardTitle className="text-sm">Create company</CardTitle></CardHeader>
