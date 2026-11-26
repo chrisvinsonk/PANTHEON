@@ -126,8 +126,19 @@ def touch(company: Company) -> None:
     company.updated_at = _now()
 
 
-def ensure_company(db: Session, owner_user_id: str | None = None) -> Company:
-    """Return the user's company, creating the seeded default when absent."""
+def ensure_company(
+    db: Session,
+    owner_user_id: str | None = None,
+    *,
+    name: str = DEFAULT_COMPANY["name"],
+    onboarded: bool = True,
+) -> Company:
+    """Return a company, creating a *named* default when absent.
+
+    This is an internal/test helper only. Request paths must never call it:
+    doing so recreates a deleted company on the next read, which is exactly
+    how the "blank company" kept coming back.
+    """
     query = db.query(Company)
     if owner_user_id is not None:
         query = query.filter(Company.owner_user_id == owner_user_id)
@@ -135,17 +146,15 @@ def ensure_company(db: Session, owner_user_id: str | None = None) -> Company:
     if company is None:
         company = seed_company_profile(
             db,
-            name="",
-            mission="",
-            strategic_context="",
-            owner="Founder",
+            name=name,
+            mission=DEFAULT_COMPANY["mission"],
+            strategic_context=DEFAULT_COMPANY["strategic_context"],
+            owner=DEFAULT_COMPANY["owner"],
             owner_user_id=owner_user_id,
-            stage="",
-            include_starters=False,
+            stage=DEFAULT_COMPANY["stage"],
+            include_starters=True,
+            onboarded=onboarded,
         )
-        db.add(company)
-        db.commit()
-        db.refresh(company)
     return company
 
 
@@ -159,6 +168,7 @@ def seed_company_profile(
     owner_user_id: str | None = None,
     stage: str = "",
     include_starters: bool = False,
+    onboarded: bool = False,
 ) -> Company:
     """Create a company profile.
 
@@ -172,6 +182,7 @@ def seed_company_profile(
         strategic_context=strategic_context,
         owner=owner,
         owner_user_id=owner_user_id,
+        onboarded=onboarded,
         stage=stage,
         strategic_priorities=[
             {"id": _new_id(), **item} for item in (STARTER_PRIORITIES if include_starters else [])

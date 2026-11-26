@@ -513,6 +513,7 @@ class CompanyCreate(BaseModel):
     strategic_context: str = Field(default="", max_length=8000)
     owner: str = Field(default="Founder", max_length=160)
     stage: str = Field(default="", max_length=40)
+    onboarded: bool = False
     seed_starters: bool = False
 
 

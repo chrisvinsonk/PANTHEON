@@ -1,4 +1,4 @@
-import { activeCompanyHeaders } from "./company";
+import { activeCompanyHeaders, clearActiveCompanyId } from "./company";
 
 const rawBase = import.meta.env.VITE_API_BASE_URL;
 const BASE_URL = rawBase ? rawBase.replace(/\/+$/, "") : null;
@@ -21,7 +21,14 @@ const request = async (path, options = {}, token) => {
     },
   });
   const data = await response.json().catch(()=>({}));
-  if(!response.ok) throw new Error(data.detail || `Request failed (${response.status})`);
+  if (!response.ok) {
+    // A deleted/stale company id must not poison every subsequent request.
+    // Drop it so the next call resolves against the user's real company.
+    if (response.status === 404 && String(data.detail || "").includes("Company not found")) {
+      clearActiveCompanyId();
+    }
+    throw new Error(data.detail || `Request failed (${response.status})`);
+  }
   return data;
 };
 export const getMeetings=(token)=>request("/meetings",{},token);

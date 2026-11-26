@@ -19,7 +19,7 @@ from ..agents.contracts import (
 )
 from ..agents.prompts import EXECUTIVE_PROFILES
 from ..auth import get_current_user
-from ..company import company_context_dict, ensure_company
+from ..company import company_context_dict
 from ..config import get_settings
 from ..database import SessionLocal, get_db
 from ..llm_config import resolve_role_llm_configs
@@ -888,10 +888,12 @@ async def run_meeting_in_background(meeting_id: int, attempt: int):
             meeting_company = (
                 initial_db.get(Company, meeting.company_id)
                 if meeting.company_id is not None
-                else ensure_company(initial_db)
+                else None
             )
-            company_context = company_context_dict(
-                meeting_company or ensure_company(initial_db)
+            company_context = (
+                company_context_dict(meeting_company)
+                if meeting_company is not None
+                else {}
             )
             initial_db.add(
                 MeetingRunCheckpoint(

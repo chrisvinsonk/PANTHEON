@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/react";
 import { Building2, ChevronDown, LoaderCircle, Plus } from "lucide-react";
-import {
-  createCompanyProfile,
-  getCompanies,
-} from "../api";
+import { createCompanyProfile, getCompanies } from "../api";
 import {
   getActiveCompanyId,
+  isBlankCompany,
+  onChangeCompany,
   setActiveCompanyId,
-  switchActiveCompany,
+  syncActiveCompanyId,
 } from "../company";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -34,46 +33,54 @@ export default function CompanySwitcher({ onManage }) {
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState({ name: "", mission: "", stage: "" });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const token = await getToken();
     if (!token) throw new Error("Your session has expired. Sign in again.");
     const list = await getCompanies(token);
     setCompanies(list);
-    const stored = getActiveCompanyId();
-    const match = list.find((company) => company.id === stored);
-    if (match) {
-      setActiveId(match.id);
-    } else if (list.length) {
-      const fallback = list[0].id;
-      setActiveCompanyId(fallback);
-      setActiveId(fallback);
-      if (stored && stored !== fallback) {
-        // The stored company no longer exists; reload so every view refetches
-        // against the fallback instead of failing on a stale header.
-        window.location.reload();
-      }
-    }
-  };
+    const usable = list.filter((company) => !isBlankCompany(company));
+    const next = syncActiveCompanyId(usable);
+    setActiveId(next);
+  }, [getToken]);
 
   useEffect(() => {
-    load()
-      .catch((requestError) => setError(requestError.message))
-      .finally(() => setLoading(false));
-  }, []);
+    let mounted = true;
+    const refresh = () => {
+      load()
+        .catch((requestError) => {
+          if (mounted) setError(requestError.message);
+        })
+        .finally(() => {
+          if (mounted) setLoading(false);
+        });
+    };
+    refresh();
+    const unsubscribe = onChangeCompany(refresh);
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [load]);
+
+  const usableCompanies = useMemo(
+    () => companies.filter((company) => !isBlankCompany(company)),
+    [companies],
+  );
 
   const activeCompany = useMemo(
-    () => companies.find((company) => company.id === activeId) || companies[0] || null,
-    [companies, activeId],
+    () => usableCompanies.find((company) => company.id === activeId) || usableCompanies[0] || null,
+    [usableCompanies, activeId],
   );
 
   const changeCompany = (event) => {
     const nextId = Number(event.target.value);
     if (!nextId || nextId === activeId) return;
-    switchActiveCompany(nextId);
+    setActiveId(nextId);
+    setActiveCompanyId(nextId);
   };
 
   const create = async () => {
-    if (!draft.name.trim()) return;
+    if (draft.name.trim().length < 2) return;
     setCreating(true);
     setError("");
     try {
@@ -87,9 +94,14 @@ export default function CompanySwitcher({ onManage }) {
         },
         token,
       );
-      switchActiveCompany(company.id);
+      setCompanies((current) => [...current, company]);
+      setActiveId(company.id);
+      setActiveCompanyId(company.id);
+      setDraft({ name: "", mission: "", stage: "" });
+      setCreateOpen(false);
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
       setCreating(false);
     }
   };
@@ -112,7 +124,8 @@ export default function CompanySwitcher({ onManage }) {
           onChange={changeCompany}
           className="h-9 max-w-[42vw] appearance-none rounded-md border border-primary/30 bg-primary/5 py-1 pl-8 pr-8 text-xs font-medium text-foreground outline-none transition-colors hover:border-primary/50 focus:border-primary/60 sm:max-w-[220px]"
         >
-          {companies.map((company) => (
+          {!usableCompanies.length && <option value="">No company</option>}
+          {usableCompanies.map((company) => (
             <option key={company.id} value={company.id}>
               {company.name}
             </option>
@@ -206,7 +219,7 @@ export default function CompanySwitcher({ onManage }) {
             </Button>
             <Button
               onClick={create}
-              disabled={creating || !draft.name.trim()}
+              disabled={creating || draft.name.trim().length < 2}
               className="gap-2"
             >
               {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />}

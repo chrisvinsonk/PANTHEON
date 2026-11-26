@@ -1,6 +1,10 @@
+import logging
+
 from sqlalchemy import Engine, create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from .config import get_settings
+
+logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
     pass
@@ -9,6 +13,15 @@ settings = get_settings()
 connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
 engine = create_engine(settings.database_url, connect_args=connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
+if settings.app_env == "production" and settings.database_url.startswith("sqlite"):
+    logger.warning(
+        "PRODUCTION WARNING: SQLite is configured (%s). On Vercel, /tmp is "
+        "ephemeral and isolated per serverless instance, so created companies "
+        "can vanish between requests. Set DATABASE_URL to a persistent "
+        "database (Postgres/Turso/Neon) for reliable production data.",
+        settings.database_url,
+    )
 
 def ensure_database_compatibility(bind: Engine = engine) -> None:
     inspector = inspect(bind)

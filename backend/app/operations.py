@@ -13,7 +13,7 @@ from datetime import date, datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from .company import company_status, ensure_company
+from .company import company_status
 from .models import DecisionRecord
 
 DISCLAIMER = (

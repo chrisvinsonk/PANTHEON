@@ -115,6 +115,22 @@ hardcoded. Generate `LLM_CONFIG_ENCRYPTION_KEY` with:
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
+### Production database (important)
+
+SQLite is fine for local development. On serverless hosts such as Vercel the
+filesystem (including `/tmp`) is ephemeral and isolated per function instance,
+so a database such as `sqlite:////tmp/company_os.db` loses created companies
+between requests. For a public deployment, set `DATABASE_URL` to a persistent
+database, for example:
+
+```bash
+DATABASE_URL=postgresql://user:password@host:5432/pantheon
+```
+
+Pantheon creates no companies implicitly at startup or on read — a company is
+only created by onboarding or the Companies view — so deletions are permanent.
+The backend logs a production warning if it detects SQLite with `APP_ENV=production`.
+
 ## Contributing
 
 Contributions are welcome! Please:

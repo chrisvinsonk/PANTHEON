@@ -9,10 +9,11 @@ with the ``X-Company-Id`` header.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..auth import get_current_user
-from ..company import company_status, serialize_company, touch
+from ..company import company_status, seed_company_profile, serialize_company, touch
 from ..database import get_db
 from ..models import (
     AgentContribution,
@@ -30,7 +31,6 @@ from ..models import (
     OperationalEvent,
 )
 from ..schemas import CompanyCreate, CompanyProfileOut, CompanyUpdate
-from ..tenancy import seed_company_profile
 
 router = APIRouter(
     prefix="/api/companies",
@@ -44,6 +44,30 @@ def _profile(db: Session, company: Company) -> CompanyProfileOut:
     payload = serialize_company(company)
     payload["counts"] = status["counts"]
     return CompanyProfileOut.model_validate(payload)
+
+
+def _accessible_company(db: Session, company_id: int, user_id: str) -> Company:
+    """Fetch a company the caller owns (or a legacy unowned company they adopt)."""
+    company = db.get(Company, company_id)
+    if company is None or not (
+        company.owner_user_id is None or company.owner_user_id == user_id
+    ):
+        raise HTTPException(404, "Company not found")
+    if company.owner_user_id is None:
+        company.owner_user_id = user_id
+        db.commit()
+    return company
+
+
+def _visible_company_count(db: Session, user_id: str) -> int:
+    """Companies the caller can see: their own plus unclaimed legacy rows."""
+    return (
+        db.query(Company)
+        .filter(
+            or_(Company.owner_user_id == user_id, Company.owner_user_id.is_(None))
+        )
+        .count()
+    )
 
 
 def _scoped_ids(db: Session, company_id: int) -> tuple[list[int], list[int]]:
@@ -117,11 +141,6 @@ def list_companies(
     user: dict = Depends(get_current_user),
 ):
     user_id = user.get("sub")
-    # Backfill legacy/unowned companies to this user so they are not lost.
-    db.query(Company).filter(Company.owner_user_id.is_(None)).update(
-        {Company.owner_user_id: user_id}, synchronize_session=False
-    )
-    db.commit()
     companies = (
         db.query(Company)
         .filter(Company.owner_user_id == user_id)
@@ -129,7 +148,19 @@ def list_companies(
         .all()
     )
     if not companies:
-        companies = [ensure_company_for_user(db, user_id)]
+        # Adopt a legacy unowned company only when there is exactly one and the
+        # user has none of their own. Never mass-assign rows across accounts and
+        # never manufacture an empty company here.
+        unowned = (
+            db.query(Company)
+            .filter(Company.owner_user_id.is_(None))
+            .order_by(Company.id.asc())
+            .all()
+        )
+        if len(unowned) == 1:
+            unowned[0].owner_user_id = user_id
+            db.commit()
+            companies = unowned
     return [_profile(db, company) for company in companies]
 
 
@@ -148,6 +179,7 @@ def create_company(
         owner_user_id=user.get("sub"),
         stage=payload.stage.strip(),
         include_starters=payload.seed_starters,
+        onboarded=payload.onboarded,
     )
     return _profile(db, company)
 
@@ -158,9 +190,7 @@ def get_company(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    company = db.get(Company, company_id)
-    if company is None or company.owner_user_id != user.get("sub"):
-        raise HTTPException(404, "Company not found")
+    company = _accessible_company(db, company_id, user.get("sub"))
     return _profile(db, company)
 
 
@@ -169,10 +199,9 @@ def update_company(
     company_id: int,
     payload: CompanyUpdate,
     db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
-    company = db.get(Company, company_id)
-    if company is None:
-        raise HTTPException(404, "Company not found")
+    company = _accessible_company(db, company_id, user.get("sub"))
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(company, field, value)
     touch(company)
@@ -186,12 +215,12 @@ def delete_company(
     company_id: int,
     force: bool = Query(default=False),
     db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
-    company = db.get(Company, company_id)
-    if company is None:
-        raise HTTPException(404, "Company not found")
-    if db.query(Company).count() <= 1:
-        raise HTTPException(409, "The workspace must keep at least one company")
+    user_id = user.get("sub")
+    company = _accessible_company(db, company_id, user_id)
+    if _visible_company_count(db, user_id) <= 1:
+        raise HTTPException(409, "Keep at least one company. Create another before deleting this one.")
     if not force:
         status = company_status(db, company)
         counts = status["counts"]
@@ -213,9 +242,3 @@ def delete_company(
     db.delete(company)
     db.commit()
     return Response(status_code=204)
-
-
-def ensure_company_for_user(db: Session, user_id: str | None) -> Company:
-    from ..company import ensure_company
-
-    return ensure_company(db, owner_user_id=user_id)

@@ -93,11 +93,10 @@ def startup():
     ensure_database_compatibility(engine)
     db = SessionLocal()
     try:
+        # Never seed an empty company at startup: on an ephemeral serverless
+        # filesystem that blank row reappears on every cold start and looks
+        # like a company the user cannot delete.
         recover_interrupted_runs(db)
-        from .company import ensure_company
-
-        company = ensure_company(db)
-        backfill_company_scope(engine, company.id)
     finally:
         db.close()
 
