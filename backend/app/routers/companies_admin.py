@@ -117,6 +117,11 @@ def list_companies(
     user: dict = Depends(get_current_user),
 ):
     user_id = user.get("sub")
+    # Backfill legacy/unowned companies to this user so they are not lost.
+    db.query(Company).filter(Company.owner_user_id.is_(None)).update(
+        {Company.owner_user_id: user_id}, synchronize_session=False
+    )
+    db.commit()
     companies = (
         db.query(Company)
         .filter(Company.owner_user_id == user_id)

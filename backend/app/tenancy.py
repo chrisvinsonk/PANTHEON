@@ -36,9 +36,20 @@ def get_active_company(
     user_id = user.get("sub")
     if x_company_id is not None:
         company = db.get(Company, x_company_id)
-        if company is not None and company.owner_user_id == user_id:
+        if company is not None and (company.owner_user_id is None or company.owner_user_id == user_id):
+            if company.owner_user_id is None:
+                company.owner_user_id = user_id
+                db.commit()
             return company
-        # Stale or foreign company id: fall back to the user's own company.
+    # Prefer an existing unowned company over creating a new blank one.
+    company = db.query(Company).filter(Company.owner_user_id.is_(None)).first()
+    if company is not None:
+        company.owner_user_id = user_id
+        db.commit()
+        return company
+    owned = db.query(Company).filter(Company.owner_user_id == user_id).first()
+    if owned is not None:
+        return owned
     return ensure_company(db, owner_user_id=user_id)
 
 
