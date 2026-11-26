@@ -49,7 +49,7 @@ flowchart TB
         SYN["Board-chair synthesis"]
         DEC["Decree recording"]
         LLM["LLM router (BYOK)<br/>local / cloud / hosted providers"]
-        DB[("SQLite / PostgreSQL")]
+        DB[("Local Postgres / Neon (deployed)")]
         ENC["Encrypted API keys<br/>(Fernet)"]
 
         API --> AUTH --> TEN
@@ -70,7 +70,7 @@ final board-chair synthesis, with a BYOK LLM router that never bakes in keys.
 
 ## Features
 
-- FastAPI backend with SQLAlchemy models and startup seeding (SQLite default, PostgreSQL optional)
+- FastAPI backend with SQLAlchemy models (local Postgres by default, persistent Postgres in production)
 - LangGraph deliberation workflow: assess → extract → cross-examine → revise → synthesize
 - BYOK (Bring Your Own Keys): API keys are entered by you, stored encrypted, never baked in
 - React (Vite) frontend with protected routes and modern UI
@@ -88,10 +88,11 @@ final board-chair synthesis, with a BYOK LLM router that never bakes in keys.
 
 ```bash
 cd backend
+docker compose up -d db   # local Postgres on localhost:5433
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # fill in your values
+cp .env.example .env   # DATABASE_URL already points at the local Postgres
 .venv/bin/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
@@ -115,21 +116,23 @@ hardcoded. Generate `LLM_CONFIG_ENCRYPTION_KEY` with:
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-### Production database (important)
+### Databases by environment
 
-SQLite is fine for local development. On serverless hosts such as Vercel the
-filesystem (including `/tmp`) is ephemeral and isolated per function instance,
-so a database such as `sqlite:////tmp/company_os.db` loses created companies
-between requests. For a public deployment, set `DATABASE_URL` to a persistent
-database, for example:
-
-```bash
-DATABASE_URL=postgresql://user:password@host:5432/pantheon
-```
+- **Local:** the backend defaults to the Postgres defined in
+  `backend/docker-compose.yml` (`localhost:5433`, database `companyos`).
+  Run `docker compose up -d db` from `backend/`, or set `DATABASE_URL` in
+  `backend/.env` to your own system Postgres. A fresh clone never contains a
+  hosted connection string.
+- **Deployed (Vercel):** set `DATABASE_URL` in the Vercel backend project's
+  environment variables to the **pooled** Neon URL and redeploy. Vercel's real
+  environment variables override the local default. `DATABASE_URL_UNPOOLED` is
+  optional and only for migrations/admin jobs.
+- The Neon CLI's repo-root `.env.local` is intentionally **not** loaded by the
+  application; it is only tooling output. This keeps local runs on local
+  Postgres even after `neon deploy` / `neon checkout`.
 
 Pantheon creates no companies implicitly at startup or on read — a company is
 only created by onboarding or the Companies view — so deletions are permanent.
-The backend logs a production warning if it detects SQLite with `APP_ENV=production`.
 
 ## Contributing
 

@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,7 +7,15 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
     app_name: str = "THE PANTHEON"
     app_env: str = "development"
-    database_url: str = "sqlite:///./the_pantheon.db"
+    # Local runs use the Docker Postgres in backend/docker-compose.yml. Real
+    # environment variables (Vercel dashboard) override this for deployments.
+    # Neon's repo-root .env.local is deliberately NOT loaded here, so a fresh
+    # clone can never pick up the maintainer's hosted database.
+    database_url: str = (
+        "postgresql+psycopg://companyos:change-me-before-use@localhost:5433/companyos"
+    )
+    # Optional direct connection for migrations/admin jobs.
+    database_url_unpooled: str = ""
     api_cors_origins: str = "*"
     clerk_issuer: str = ""
     llm_config_encryption_key: str = ""

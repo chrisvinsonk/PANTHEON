@@ -8,7 +8,7 @@ decree recording.
 
 ## Included
 - FastAPI application (`app/main:app`)
-- SQLAlchemy models + startup seeding (SQLite by default; PostgreSQL optional)
+- SQLAlchemy models (local Postgres by default; persistent Postgres in production)
 - LangGraph board deliberation graph (assess → extract → cross-examine → revise → synthesize)
 - Local inference through LM Studio or Ollama, plus configurable hosted AI providers
 - REST API under `/api` (health, executives, board meetings)
@@ -16,11 +16,14 @@ decree recording.
 ## Requirements
 - Python 3.11+
 - LM Studio, Ollama, or an API key from a supported hosted provider
-- PostgreSQL 15+ (optional; SQLite is the default quick-start database)
+- PostgreSQL 15+ (the included Docker Compose database is the local default)
 
 ## Quick start
 
 ```bash
+# Start the local Postgres used by default (localhost:5433)
+docker compose up -d db
+
 # Create and activate a virtual environment
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -30,8 +33,9 @@ pip install -r requirements.txt
 
 # Create the environment file from the example
 cp .env.example .env
-# Edit .env if you want to route any role to a cloud provider (set CLOUD_API_KEY).
-# Set CLERK_ISSUER to the HTTPS issuer for the Clerk instance used by the frontend.
+# DATABASE_URL already points at the local Postgres above. Point it at your own
+# system Postgres if you prefer. Edit .env to route roles to a cloud provider
+# (set CLOUD_API_KEY) and set CLERK_ISSUER for the Clerk instance used by the UI.
 
 # Start the API from the repository root using the project interpreter
 .venv/bin/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
@@ -41,12 +45,16 @@ cp .env.example .env
 API docs: http://127.0.0.1:8000/docs
 
 ## Environment variables
-Copy `.env.example` to `.env` and adjust as needed. All settings are read from
-`.env` at the repository root (see `app/config.py`).
+Copy `.env.example` to `.env` and adjust as needed. When running from `backend/`,
+settings are read from `backend/.env`; real process environment variables win.
+The Neon CLI's repo-root `.env.local` is deliberately not loaded by the app, so
+local runs always use local Postgres. Deployed Vercel injects `DATABASE_URL` from
+its dashboard (see `app/config.py`).
 
 | Variable | Purpose |
 |---|---|
-| `DATABASE_URL` | SQLAlchemy connection string (default: `sqlite:///./company_os.db`) |
+| `DATABASE_URL` | SQLAlchemy connection string (local default: the Docker Postgres at `localhost:5433`; Vercel sets the pooled Neon URL) |
+| `DATABASE_URL_UNPOOLED` | Optional direct connection for migrations/admin jobs |
 | `API_CORS_ORIGINS` | `*` to allow all browser origins, or a comma-separated frontend-origin allowlist |
 | `CLERK_ISSUER` | HTTPS issuer URL for the Clerk instance; required for authenticated API routes |
 | `LLM_CONFIG_ENCRYPTION_KEY` | Stable Fernet key used to encrypt provider API keys saved through Model Sources; required to manage sources in the UI |
@@ -79,19 +87,23 @@ the backend host; `localhost` refers to the API machine, not the browser. For
 hosted backends, use an address reachable by the deployed backend rather than
 the developer machine's `localhost`.
 
-## PostgreSQL (optional)
+## Databases by environment
 
-The included `docker-compose.yml` runs a PostgreSQL 16 database:
+The included `docker-compose.yml` runs the local PostgreSQL 16 database:
 
 ```bash
 docker compose up -d db
 ```
 
-Then set `DATABASE_URL=postgresql+psycopg://companyos:change-me-before-use@localhost:5433/companyos` in `.env`.
+`DATABASE_URL` in `.env.example` already points at it
+(`postgresql+psycopg://companyos:change-me-before-use@localhost:5433/companyos`).
+Change that value to use your own system Postgres instead.
 
-For hosted deployments, use a persistent database such as managed PostgreSQL.
-The default SQLite file is intended for local development and can be lost when a
-host replaces an ephemeral service filesystem.
+For the deployed Vercel backend, set `DATABASE_URL` in the Vercel project's
+environment variables to the **pooled** Neon connection string and redeploy.
+Serverless filesystems are ephemeral, so SQLite or `/tmp` is never suitable for
+the hosted instance. Neon's `.env.local` is tooling output only — the app does
+not read it, which keeps fresh clones on their own Postgres.
 
 ## API endpoints
 - `GET /api/health`

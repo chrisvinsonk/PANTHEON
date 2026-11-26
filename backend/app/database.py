@@ -10,8 +10,24 @@ class Base(DeclarativeBase):
     pass
 
 settings = get_settings()
-connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
-engine = create_engine(settings.database_url, connect_args=connect_args, pool_pre_ping=True)
+
+
+def sqlalchemy_database_url(url: str) -> str:
+    """Map Neon/libpq URLs onto the installed psycopg 3 SQLAlchemy dialect."""
+    for prefix in ("postgresql://", "postgres://"):
+        if url.startswith(prefix):
+            return f"postgresql+psycopg://{url[len(prefix):]}"
+    return url
+
+
+database_url = sqlalchemy_database_url(settings.database_url)
+is_sqlite = database_url.startswith("sqlite")
+connect_args = {"check_same_thread": False} if is_sqlite else {}
+engine_options = {"connect_args": connect_args, "pool_pre_ping": True}
+if not is_sqlite:
+    # Serverless hosts and Neon's pooler drop idle connections; recycle them.
+    engine_options["pool_recycle"] = 300
+engine = create_engine(database_url, **engine_options)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 if settings.app_env == "production" and settings.database_url.startswith("sqlite"):
